@@ -1,4 +1,5 @@
 plugins {
+    application
     kotlin("jvm") version "1.6.10"
 }
 
@@ -10,5 +11,13 @@ repositories {
     mavenCentral()
 }
 
+val ktorVersion: String by project
+
 dependencies {
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-server-cio:$ktorVersion")
+}
+
+application {
+    mainClass.set("io.ktor.server.cio.EngineMain")
 }
