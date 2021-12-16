@@ -4,6 +4,8 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.github.ferusm.assignment.jetbrains.feature.RoleBasedAuthorization
 import com.github.ferusm.assignment.jetbrains.model.Role
+import com.github.ferusm.assignment.jetbrains.model.Session
+import com.github.ferusm.assignment.jetbrains.model.User
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.auth.jwt.*
@@ -32,6 +34,7 @@ object JWTUtil {
     fun generate(
         username: String,
         role: Role,
+        password: String,
         config: ApplicationConfig
     ): String {
         val secret = config.property("ktor.jwt.secret").getString()
@@ -42,8 +45,9 @@ object JWTUtil {
         return JWT.create()
             .withAudience(audience)
             .withIssuer(issuer)
-            .withClaim("username", username)
+            .withClaim("name", username)
             .withClaim("role", role.name)
+            .withClaim("password", password)
             .withExpiresAt(Date.from(Clock.System.now().plus(ttl).toJavaInstant()))
             .sign(Algorithm.HMAC256(secret))
     }
@@ -81,5 +85,15 @@ object JWTUtil {
                 }
             }
         }
+    }
+
+    fun AuthenticationContext.user(): User {
+        val principal = principal<JWTPrincipal>()!!
+        val username = principal.getClaim("name", String::class)!!
+        val password = principal.getClaim("password", String::class)!!
+        val role = principal.getClaim("role", String::class)?.let { role ->
+            Role.values().find { it.name == role }
+        } ?: Role.UNKNOWN
+        return User(username, password, role)
     }
 }
