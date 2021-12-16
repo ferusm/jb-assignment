@@ -1,5 +1,7 @@
 package com.github.ferusm.assignment.jetbrains.module
 
+import com.github.ferusm.assignment.jetbrains.exception.ConflictException
+import com.github.ferusm.assignment.jetbrains.exception.NotFoundException
 import com.github.ferusm.assignment.jetbrains.util.JWTUtil.installClaimBasedRoleAuthorization
 import com.github.ferusm.assignment.jetbrains.util.JWTUtil.installJwtAuthentication
 import io.ktor.application.*
@@ -16,7 +18,13 @@ fun Application.coreModule() {
 
     install(StatusPages) {
         exception<ContentTransformationException> {
-            call.respond(HttpStatusCode.BadRequest)
+            call.respond(HttpStatusCode.BadRequest, it.message ?: it.localizedMessage)
+        }
+        exception<ConflictException> {
+            call.respond(HttpStatusCode.Conflict, it.message ?: it.localizedMessage)
+        }
+        exception<NotFoundException> {
+            call.respond(HttpStatusCode.NotFound, it.message ?: it.localizedMessage)
         }
     }
 }

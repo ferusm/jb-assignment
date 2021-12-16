@@ -4,9 +4,12 @@ package com.github.ferusm.assignment.jetbrains.module
 import at.favre.lib.crypto.bcrypt.BCrypt
 import com.github.ferusm.assignment.jetbrains.database.entity.UserEntity
 import com.github.ferusm.assignment.jetbrains.database.table.UsersTable
+import com.github.ferusm.assignment.jetbrains.exception.ConflictException
+import com.github.ferusm.assignment.jetbrains.exception.NotFoundException
 import com.github.ferusm.assignment.jetbrains.model.Credentials
 import com.github.ferusm.assignment.jetbrains.model.Role
 import com.github.ferusm.assignment.jetbrains.model.Session
+import com.github.ferusm.assignment.jetbrains.model.User
 import com.github.ferusm.assignment.jetbrains.util.JWTUtil
 import io.ktor.application.*
 import io.ktor.http.*
@@ -20,24 +23,27 @@ import org.jetbrains.exposed.sql.transactions.transaction
 fun Application.userManagementModule() {
     val database = Database.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
 
-    val superuserName = environment.config.property("ktor.superuser.name").getString()
-    val superuserPassword = environment.config.property("ktor.superuser.password").getString()
-
     transaction(database) {
         SchemaUtils.create(UsersTable)
-        val isSuperuserExists = !UserEntity.find { UsersTable.name eq superuserName }.empty()
-        if (!isSuperuserExists) {
-            UserEntity.new {
-                name = superuserName
-                password = superuserPassword
-                role = Role.ADMIN
-            }
-        }
     }
 
     routing {
         post("/user") {
-            call.respond(HttpStatusCode.NotImplemented)
+            val request = call.receive<User>()
+            val encryptedPassword = BCrypt.withDefaults().hashToString(4, request.password.toCharArray())
+            val entity = transaction {
+                if (UserEntity.find { UsersTable.name eq request.username }.empty()) {
+                    UserEntity.new {
+                        name = request.username
+                        password = encryptedPassword
+                        role = request.role
+                    }
+                } else {
+                    throw ConflictException("User with name '${request.username}' already exists")
+                }
+            }
+            val response = User(entity.name, entity.password, entity.role)
+            call.respond(HttpStatusCode.Created, response)
         }
         put("/password") {
             call.respond(HttpStatusCode.NotImplemented)
@@ -46,20 +52,14 @@ fun Application.userManagementModule() {
             val credentials = call.receive<Credentials>()
 
             val user = transaction { UserEntity.find { UsersTable.name eq credentials.username }.firstOrNull() }
-            if (user == null) {
-                call.respond(HttpStatusCode.BadRequest, "Wrong username")
-                return@post
-            }
+                ?: throw NotFoundException("User with name '${credentials.username}' not found")
             val isPasswordValid = BCrypt.verifyer().verify(credentials.password.toCharArray(), user.password).verified
             if (!isPasswordValid) {
-                call.respond(HttpStatusCode.BadRequest, "Wrong password")
-                return@post
+                throw IllegalArgumentException("Wrong password")
             }
-
             val token = JWTUtil.generate(user.name, user.role, environment.config)
-
             val session = Session(user.name, user.role, token)
-            call.respond(HttpStatusCode.OK, session)
+            call.respond(HttpStatusCode.Created, session)
         }
     }
 }
