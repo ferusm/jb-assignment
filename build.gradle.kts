@@ -11,11 +11,15 @@ repositories {
     mavenCentral()
 }
 
+val kotlinVersion: String by project
 val ktorVersion: String by project
 
 dependencies {
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-cio:$ktorVersion")
+
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
 }
 
 application {
