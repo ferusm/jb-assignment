@@ -206,7 +206,7 @@ components:
         role:
           type: string
           enum: [ "USER", "REVIEWER", "ADMIN" ]
-        key:
+        token:
           type: string
     Metrics:
       type: object
