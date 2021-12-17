@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.github.ferusm.assignment.jetbrains.feature.RoleBasedAuthorization
 import com.github.ferusm.assignment.jetbrains.model.Role
-import com.github.ferusm.assignment.jetbrains.model.Session
 import com.github.ferusm.assignment.jetbrains.model.User
 import io.ktor.application.*
 import io.ktor.auth.*
