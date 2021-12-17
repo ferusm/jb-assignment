@@ -10,7 +10,7 @@ import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.serialization.*
 
-fun Application.coreModule() {
+fun Application.main() {
     installJwtAuthentication()
     installClaimBasedRoleAuthorization()
 

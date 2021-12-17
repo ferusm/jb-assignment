@@ -2,8 +2,8 @@ package com.github.ferusm.assignment.jetbrains
 
 import at.favre.lib.crypto.bcrypt.BCrypt
 import com.github.ferusm.assignment.jetbrains.model.*
-import com.github.ferusm.assignment.jetbrains.module.coreModule
-import com.github.ferusm.assignment.jetbrains.module.userManagementModule
+import com.github.ferusm.assignment.jetbrains.module.main
+import com.github.ferusm.assignment.jetbrains.module.users
 import com.typesafe.config.ConfigFactory
 import io.ktor.config.*
 import io.ktor.http.*
@@ -17,8 +17,8 @@ class UserManagementModuleTest {
     private val environment = createTestEnvironment {
         config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
         module {
-            coreModule()
-            userManagementModule()
+            main()
+            users()
         }
     }
 
@@ -26,7 +26,7 @@ class UserManagementModuleTest {
     fun createUser() {
         withApplication(environment) {
             val userRequest = User("test", "test", Role.ADMIN)
-            val userResponse = with(handleRequest(HttpMethod.Post, "/user") {
+            val userResponse = with(handleRequest(HttpMethod.Post, "/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
             }) {
@@ -47,12 +47,12 @@ class UserManagementModuleTest {
     fun createSession() {
         withApplication(environment) {
             val userRequest = User("test", "test", Role.ADMIN)
-            handleRequest(HttpMethod.Post, "/user") {
+            handleRequest(HttpMethod.Post, "/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
             }
             val credentialsRequest = Credentials("test", "test")
-            val sessionResponse = with(handleRequest(HttpMethod.Post, "/session") {
+            val sessionResponse = with(handleRequest(HttpMethod.Post, "/sessions") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(credentialsRequest))
             }) {
@@ -69,7 +69,7 @@ class UserManagementModuleTest {
     fun changePassword() {
         withApplication(environment) {
             val userRequest = User("test", "test", Role.ADMIN)
-            val userResponse = with(handleRequest(HttpMethod.Post, "/user") {
+            val userResponse = with(handleRequest(HttpMethod.Post, "/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
             }) {
@@ -77,7 +77,7 @@ class UserManagementModuleTest {
             }
 
             val credentialsRequest = Credentials("test", "test")
-            val sessionResponse = with(handleRequest(HttpMethod.Post, "/session") {
+            val sessionResponse = with(handleRequest(HttpMethod.Post, "/sessions") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(credentialsRequest))
             }) {
@@ -86,7 +86,7 @@ class UserManagementModuleTest {
             }
 
             val passwordRequest = Password("Another password")
-            val newUserResponse = with(handleRequest(HttpMethod.Put, "/password") {
+            val newUserResponse = with(handleRequest(HttpMethod.Put, "/users/password") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 addHeader(HttpHeaders.Authorization, "Bearer ${sessionResponse.token}")
                 setBody(Json.encodeToString(passwordRequest))

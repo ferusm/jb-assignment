@@ -18,7 +18,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
-fun Application.userManagementModule() {
+fun Application.users() {
     val database = Database.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
 
     transaction(database) {
@@ -26,7 +26,7 @@ fun Application.userManagementModule() {
     }
 
     routing {
-        post("/user") {
+        post("/users") {
             val request = call.receive<User>()
             val encryptedPassword = BCryptUtil.encrypt(4, request.password)
             val entity = transaction {
@@ -44,7 +44,7 @@ fun Application.userManagementModule() {
             call.respond(HttpStatusCode.Created, response)
         }
 
-        post("/session") {
+        post("/sessions") {
             val credentials = call.receive<Credentials>()
 
             val user = transaction { UserEntity.find { UsersTable.name eq credentials.username }.firstOrNull() }
@@ -58,7 +58,7 @@ fun Application.userManagementModule() {
         }
 
         authenticate("service") {
-            put("/password") {
+            put("/users/password") {
                 val user = call.authentication.user()
                 val request = call.receive<Password>()
                 val encryptedPassword = BCryptUtil.encrypt(4, request.password)
