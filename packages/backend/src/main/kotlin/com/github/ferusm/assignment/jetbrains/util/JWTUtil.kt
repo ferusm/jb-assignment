@@ -15,22 +15,7 @@ import java.util.*
 import kotlin.time.Duration
 
 object JWTUtil {
-    fun generate(
-        username: String,
-        role: Role,
-        issuer: String,
-        secret: String,
-        ttl: Duration,
-        vararg audience: String
-    ): String = JWT.create()
-        .withAudience(*audience)
-        .withIssuer(issuer)
-        .withClaim("username", username)
-        .withClaim("role", role.name)
-        .withExpiresAt(Date.from(Clock.System.now().plus(ttl).toJavaInstant()))
-        .sign(Algorithm.HMAC256(secret))
-
-    fun generate(
+    fun generateAccessToken(
         username: String,
         role: Role,
         password: String,
@@ -39,7 +24,7 @@ object JWTUtil {
         val secret = config.property("ktor.jwt.secret").getString()
         val issuer = config.property("ktor.jwt.issuer").getString()
         val audience = config.property("ktor.jwt.audience").getString()
-        val ttl = Duration.parse(config.property("ktor.jwt.ttl").getString())
+        val ttl = Duration.parse(config.property("ktor.jwt.accessTtl").getString())
 
         return JWT.create()
             .withAudience(audience)
@@ -49,6 +34,34 @@ object JWTUtil {
             .withClaim("password", password)
             .withExpiresAt(Date.from(Clock.System.now().plus(ttl).toJavaInstant()))
             .sign(Algorithm.HMAC256(secret))
+    }
+
+    fun generateRefreshToken(config: ApplicationConfig): String {
+        val secret = config.property("ktor.jwt.secret").getString()
+        val issuer = config.property("ktor.jwt.issuer").getString()
+        val audience = config.property("ktor.jwt.audience").getString()
+        val ttl = Duration.parse(config.property("ktor.jwt.refreshTtl").getString())
+
+        return JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withExpiresAt(Date.from(Clock.System.now().plus(ttl).toJavaInstant()))
+            .sign(Algorithm.HMAC256(secret))
+    }
+
+    fun isValidRefreshToken(token: String, config: ApplicationConfig): Boolean {
+        val secret = config.property("ktor.jwt.secret").getString()
+        val issuer = config.property("ktor.jwt.issuer").getString()
+        val audience = config.property("ktor.jwt.audience").getString()
+        val verifier = JWT
+            .require(Algorithm.HMAC256(secret))
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .build()
+        val result = runCatching {
+            verifier.verify(token)
+        }
+        return result.isSuccess
     }
 
     fun Application.installJwtAuthentication() {
@@ -65,7 +78,7 @@ object JWTUtil {
             .build()
 
         install(Authentication) {
-            jwt("service") {
+            jwt {
                 realm = jwtRealm
                 verifier(jwtVerifier)
                 validate { jwtCredential -> JWTPrincipal(jwtCredential.payload) }

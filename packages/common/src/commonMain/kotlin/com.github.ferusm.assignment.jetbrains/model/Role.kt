@@ -4,5 +4,7 @@ enum class Role {
     ADMIN,
     REVIEWER,
     USER,
-    UNKNOWN
+    UNKNOWN;
+
+    fun check(role: Role) = ordinal >= role.ordinal
 }
