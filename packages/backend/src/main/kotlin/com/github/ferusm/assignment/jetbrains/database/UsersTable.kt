@@ -8,5 +8,5 @@ object UsersTable: IntIdTable("users") {
     val name: Column<String> = varchar("name", 20).uniqueIndex()
     val identifier: Column<String> = varchar("password", 80)
     val role: Column<Role> = enumerationByName("role", 10, Role::class)
-    val refreshToken: Column<String> = varchar("refresh_token", 100).default("").index()
+    val refreshToken: Column<String> = varchar("refresh_token", 200).default("").index()
 }

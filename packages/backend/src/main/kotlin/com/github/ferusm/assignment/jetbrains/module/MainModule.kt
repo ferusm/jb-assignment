@@ -16,9 +16,6 @@ fun Application.main() {
     install(ContentNegotiation) { json() }
 
     install(StatusPages) {
-        exception<ContentTransformationException> {
-            call.respond(HttpStatusCode.BadRequest, it.message ?: it.localizedMessage)
-        }
         exception<ConflictException> {
             call.respond(HttpStatusCode.Conflict, it.message ?: it.localizedMessage)
         }

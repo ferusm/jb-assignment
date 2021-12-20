@@ -3,8 +3,44 @@ info:
   title: JetBrains assignement web application server
   description: That server implements points from JetBrains assignement
   version: 0.1.0-SNAPSHOT
+servers:
+  - url: http://localhost:9090
 paths:
-  /users:
+  /api/users/current:
+    post:
+      summary: Retrieve current session user
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid access token
+        '500':
+          description: Internal server error
+  /api/users/current/password:
+    put:
+      summary: Change current user password
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Password'
+      responses:
+        '200':
+          description: Password updated
+        '401':
+          description: Invalid access token
+        '500':
+          description: Internal server error
+  /api/users:
     post:
       summary: Create new user
       requestBody:
@@ -20,19 +56,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        '401':
-          description: User creating allowed only for authorized ADMIN users
-        '403':
-          description: User creating not allowed for current user
         '409':
-          description: New user conflicted with early created users
+          description: Conflict with early created users (name property is unique)
         '500':
           description: Internal server error
-        '501':
-          description: Method not implemented yet
-  /sessions:
+  /api/tokens:
     post:
-      summary: Create new session
+      summary: Create token pair (access, refresh)
       requestBody:
         required: true
         content:
@@ -45,36 +75,108 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Session'
-        '400':
-          description: Unable to create session for current user (wrong username/password)
+                $ref: '#/components/schemas/TokenPair'
+        '404':
+          description: User not found
         '500':
           description: Internal server error
-        '501':
-          description: Method not implemented yet
-  /users/password:
-    put:
-      summary: Update current user password
+  /api/refresh:
+    post:
+      summary: Create new token pair (access, refresh)
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Password'
+              $ref: '#/components/schemas/RefreshToken'
       responses:
         '200':
-          description: Password succeffuly updated
+          description: Refreshed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-        '401':
-          description: Unauthorized
+                $ref: '#/components/schemas/TokenPair'
+        '400':
+          description: Bad refresh token
         '500':
           description: Internal server error
-        '501':
-          description: Method not implemented yet
+  /api/logout:
+    post:
+      summary: Invalidate refresh token
+      responses:
+        '200':
+          description: Invalidated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshToken'
+        '500':
+          description: Internal server error
+  /api/admin/hello:
+    get:
+      summary: Hello for user with ADMIN role
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Basic response
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Invalid access token
+        '403':
+          description: Current user have wrong ROLE
+  /api/reviewer/hello:
+    get:
+      summary: Hello for user with ADMIN role
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Basic response
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Invalid access token
+        '403':
+          description: Current user have wrong ROLE
+  /api/user/hello:
+    get:
+      summary: Hello for user with ADMIN role
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Basic response
+          content:
+            text/plain:
+              schema:
+                type: string
+        '401':
+          description: Invalid access token
+        '403':
+          description: Current user have wrong ROLE
+  /openapi:
+    get:
+      summary: OpenAPI 3.0.0 yml spec
+      responses:
+        '200':
+          description: Spec content
+          content:
+            text/plain:
+              schema:
+                type: string
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     User:
       type: object
@@ -97,6 +199,18 @@ components:
         username:
           type: string
         password:
+          type: string
+    TokenPair:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+    RefreshToken:
+      type: object
+      properties:
+        refresh:
           type: string
     Session:
       type: object

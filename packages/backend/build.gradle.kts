@@ -1,8 +1,9 @@
 plugins {
     application
     kotlin("jvm")
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
-    id("com.github.johnrengelman.shadow") version "7.1.1"
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.github.johnrengelman.shadow")
+    id("org.openapi.generator")
 }
 
 group = "com.github.ferusm.assignment.jetbrains"
@@ -17,10 +18,20 @@ val kotlinVersion: String by project
 val ktorVersion: String by project
 val kotlinxDateTimeVersion: String by project
 val logbackVersion: String by project
+val kotlinxSerializationVersion: String by project
+val exposedVersion: String by project
+val bcryptVersion: String by project
+val h2Version: String by project
 
+tasks.openApiGenerate {
+    inputSpec.set("${projectDir}/openapi.yml")
+    outputDir.set("${buildDir}/generated/html/openapi")
+    generatorName.set("html2")
+}
 
 tasks.processResources {
-    from("../frontend/build/distributions")
+    from("../react-frontend/build/distributions")
+    from("${buildDir}/generated/html")
 }
 
 dependencies {
@@ -32,18 +43,15 @@ dependencies {
     implementation("io.ktor:ktor-auth:$ktorVersion")
     implementation("io.ktor:ktor-auth-jwt:$ktorVersion")
 
-    implementation("at.favre.lib:bcrypt:0.9.0")
+    implementation("at.favre.lib:bcrypt:$bcryptVersion")
 
     implementation("io.ktor:ktor-serialization:$ktorVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
 
-    implementation("org.jetbrains.exposed", "exposed-core", "0.34.1")
-    implementation("org.jetbrains.exposed", "exposed-dao", "0.34.1")
-    implementation("org.jetbrains.exposed", "exposed-jdbc", "0.34.1")
-    implementation("com.h2database:h2:1.4.199")
-
-    implementation("io.insert-koin:koin-core:3.1.4")
-    implementation("io.insert-koin:koin-ktor:3.1.4")
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("com.h2database:h2:$h2Version")
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
 

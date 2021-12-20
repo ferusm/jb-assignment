@@ -18,7 +18,7 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 
-fun Application.tokens() {
+fun Application.auth() {
     val database = runBlocking { DatabaseProvider.get("jdbc:h2:mem:users;DB_CLOSE_DELAY=-1", "org.h2.Driver") }
 
     transaction(database) {
@@ -35,7 +35,7 @@ fun Application.tokens() {
             if (!isPasswordValid) {
                 throw BadRequestException("Wrong password")
             }
-            val access = JWTUtil.generateAccessToken(user.name, user.role, user.identifier, environment.config)
+            val access = JWTUtil.generateAccessToken(user.name, user.role, environment.config)
             val refresh = JWTUtil.generateRefreshToken(environment.config)
             transaction(database) {
                 UserEntity.findById(user.id)?.apply { refreshToken = refresh }
@@ -43,21 +43,29 @@ fun Application.tokens() {
             val tokenPair = TokenPair(access, refresh)
             call.respond(HttpStatusCode.Created, tokenPair)
         }
-        post("/tokens/refresh") {
+        post("/api/refresh") {
             val token = call.receive<RefreshToken>().refresh
             if (!JWTUtil.isValidRefreshToken(token, environment.config)) {
                 throw BadRequestException("Invalid token")
             }
-            val user = transaction(database) {
-                UserEntity.find { UsersTable.refreshToken eq token }.firstOrNull()
+            val tokenPair = transaction {
+                UserEntity.find { UsersTable.refreshToken eq token }.firstOrNull()?.let {
+                    val access = JWTUtil.generateAccessToken(it.name, it.role, environment.config)
+                    val refresh = JWTUtil.generateRefreshToken(environment.config)
+                    it.refreshToken = refresh
+                    TokenPair(access, refresh)
+                }
             } ?: throw BadRequestException("Invalid token")
-            val access = JWTUtil.generateAccessToken(user.name, user.role, user.identifier, environment.config)
-            val refresh = JWTUtil.generateRefreshToken(environment.config)
-            transaction {
-                UserEntity.find { UsersTable.refreshToken eq token }.firstOrNull()?.apply { refreshToken = refresh }
-            } ?: throw BadRequestException("Invalid token")
-            val tokenPair = TokenPair(access, refresh)
             call.respond(HttpStatusCode.OK, tokenPair)
+        }
+        post("/api/logout") {
+            val token = call.receive<RefreshToken>().refresh
+            transaction(database) {
+                UserEntity.find { UsersTable.refreshToken eq token }.firstOrNull()?.also {
+                    it.delete()
+                }
+            }
+            call.respond(HttpStatusCode.OK)
         }
     }
 }

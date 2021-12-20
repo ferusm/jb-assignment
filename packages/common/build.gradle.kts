@@ -1,7 +1,7 @@
 plugins {
     kotlin("multiplatform")
     `maven-publish`
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10"
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 group = "com.github.ferusm.assignment.jetbrains"
@@ -12,13 +12,17 @@ repositories {
     mavenCentral()
 }
 
+val kotlinxSerializationVersion: String by project
+
 kotlin {
     jvm()
-    js(IR) { browser() }
+    js(IR) {
+        browser()
+    }
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
             }
         }
     }

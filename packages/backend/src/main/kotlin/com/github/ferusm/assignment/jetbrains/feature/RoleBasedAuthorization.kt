@@ -10,7 +10,7 @@ import io.ktor.util.*
 import io.ktor.util.pipeline.*
 
 class RoleBasedAuthorization(private val config: Config) {
-    data class Config(var roleProvider: (Principal) -> Role = { Role.UNKNOWN })
+    data class Config(var roleProvider: (Principal) -> Role? = { null })
 
     fun interceptPipeline(
         pipeline: ApplicationCallPipeline,
@@ -22,7 +22,7 @@ class RoleBasedAuthorization(private val config: Config) {
         pipeline.intercept(AuthorizationPhase) {
             val principal = call.authentication.principal<Principal>() ?: throw IllegalStateException("RoleBasedAuthorization feature can't retrieve Principal from call")
             val currentRole = config.roleProvider.invoke(principal)
-            if (currentRole.ordinal > role.ordinal) {
+            if ((currentRole?.ordinal ?: 0) > role.ordinal) {
                 call.respond(HttpStatusCode.Forbidden)
                 finish()
             }
@@ -30,7 +30,7 @@ class RoleBasedAuthorization(private val config: Config) {
     }
 
     companion object Feature : ApplicationFeature<ApplicationCallPipeline, Config, RoleBasedAuthorization> {
-        public val AuthorizationPhase = PipelinePhase("Authorization")
+        val AuthorizationPhase = PipelinePhase("Authorization")
 
         override val key = AttributeKey<RoleBasedAuthorization>("RoleBasedAuthorization")
 

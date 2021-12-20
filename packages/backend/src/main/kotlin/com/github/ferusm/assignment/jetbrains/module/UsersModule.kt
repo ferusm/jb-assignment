@@ -44,17 +44,13 @@ fun Application.users() {
                                 it.identifier = newIdentifier
                             }
                         }
-                        val response = user.copy(identifier = newIdentifier)
-                        call.respond(HttpStatusCode.OK, response)
+                        call.respond(HttpStatusCode.OK)
                     }
                 }
             }
             post {
                 val request = call.receive<User>()
-                if (request.role == Role.UNKNOWN) {
-                    throw BadRequestException("Unable to create user with UNKNOWN role")
-                }
-                val newIdentifier = BCryptUtil.encrypt(4, request.identifier)
+                val newIdentifier = BCryptUtil.encrypt(4, request.identifier!!)
                 val entity = transaction {
                     if (UserEntity.find { UsersTable.name eq request.name }.empty()) {
                         UserEntity.new {

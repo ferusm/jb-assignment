@@ -18,7 +18,6 @@ object JWTUtil {
     fun generateAccessToken(
         username: String,
         role: Role,
-        password: String,
         config: ApplicationConfig
     ): String {
         val secret = config.property("ktor.jwt.secret").getString()
@@ -31,7 +30,6 @@ object JWTUtil {
             .withIssuer(issuer)
             .withClaim("name", username)
             .withClaim("role", role.name)
-            .withClaim("password", password)
             .withExpiresAt(Date.from(Clock.System.now().plus(ttl).toJavaInstant()))
             .sign(Algorithm.HMAC256(secret))
     }
@@ -91,9 +89,9 @@ object JWTUtil {
             roleProvider = { principal ->
                 if (principal is JWTPrincipal) {
                     val role = principal.getClaim("role", String::class)
-                    Role.values().find { it.name == role } ?: Role.UNKNOWN
+                    Role.values().find { it.name == role }
                 } else {
-                    Role.UNKNOWN
+                    null
                 }
             }
         }
@@ -102,10 +100,9 @@ object JWTUtil {
     fun AuthenticationContext.user(): User {
         val principal = principal<JWTPrincipal>()!!
         val username = principal.getClaim("name", String::class)!!
-        val password = principal.getClaim("password", String::class)!!
         val role = principal.getClaim("role", String::class)?.let { role ->
             Role.values().find { it.name == role }
-        } ?: Role.UNKNOWN
-        return User(username, password, role)
+        }!!
+        return User(username, null, role)
     }
 }

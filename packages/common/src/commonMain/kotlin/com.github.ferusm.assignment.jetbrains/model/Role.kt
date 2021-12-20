@@ -3,8 +3,7 @@ package com.github.ferusm.assignment.jetbrains.model
 enum class Role {
     ADMIN,
     REVIEWER,
-    USER,
-    UNKNOWN;
+    USER;
 
-    fun check(role: Role) = ordinal >= role.ordinal
+    fun check(role: Role) = ordinal <= role.ordinal
 }
