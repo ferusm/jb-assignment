@@ -9,17 +9,17 @@
 
 ### Installing
 
-Project consist of two independent modules:
+Project consists of two independent modules:
 
-- packages:backend
-- packages:react-frontend
+- `packages:backend`
+- `packages:react-frontend`
 
-You have two variants for run it:
+There are two options to run it:
 
 - As independent services;
-- With frontend hosted by backend.
+- With `packages:react-frontend` hosted by `packages:backend`.
 
-#### Installing with frontend hosted by backend
+#### Installing with `packages:react-frontend` hosted by `packages:backend`
 
 Windows:
 
