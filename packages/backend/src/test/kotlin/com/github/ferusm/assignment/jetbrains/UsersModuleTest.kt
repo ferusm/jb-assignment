@@ -12,8 +12,8 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.*
+import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.*
 
 class UsersModuleTest {
     private val environment = createTestEnvironment {

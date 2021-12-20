@@ -24,9 +24,8 @@ import react.useState
 import styled.*
 
 
-
 val CreateUser = fc<Props> {
-    var  name by useState("")
+    var name by useState("")
     var identifier by useState("")
     var role by useState<Role?>(null)
     val navigation = useNavigate()
@@ -154,7 +153,7 @@ val CreateUser = fc<Props> {
                         attrs {
                             selected = true
                         }
-                        + ""
+                        +""
                     }
                     Role.values().map { it.name }.map {
                         option {

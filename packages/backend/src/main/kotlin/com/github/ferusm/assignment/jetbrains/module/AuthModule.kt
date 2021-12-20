@@ -3,12 +3,12 @@ package com.github.ferusm.assignment.jetbrains.module
 import com.github.ferusm.assignment.jetbrains.database.DatabaseProvider
 import com.github.ferusm.assignment.jetbrains.database.UserEntity
 import com.github.ferusm.assignment.jetbrains.database.UsersTable
-import com.github.ferusm.assignment.jetbrains.model.*
+import com.github.ferusm.assignment.jetbrains.model.Credentials
+import com.github.ferusm.assignment.jetbrains.model.RefreshToken
 import com.github.ferusm.assignment.jetbrains.model.TokenPair
 import com.github.ferusm.assignment.jetbrains.util.BCryptUtil
 import com.github.ferusm.assignment.jetbrains.util.JWTUtil
 import io.ktor.application.*
-import io.ktor.application.Application
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*

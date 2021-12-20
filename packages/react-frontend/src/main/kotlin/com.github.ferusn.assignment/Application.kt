@@ -1,16 +1,21 @@
 package com.github.ferusn.assignment
 
 import com.github.ferusm.assignment.jetbrains.model.TokenPair
-import com.github.ferusn.assignment.page.*
+import com.github.ferusn.assignment.page.ChangePassword
+import com.github.ferusn.assignment.page.CreateUser
+import com.github.ferusn.assignment.page.Home
+import com.github.ferusn.assignment.page.Login
 import com.github.ferusn.assignment.provider.HttpClientProvider
-import io.ktor.client.*
 import kotlinx.browser.localStorage
 import org.w3c.dom.get
 import org.w3c.dom.set
-import react.*
+import react.Props
+import react.createElement
+import react.fc
 import react.router.Route
 import react.router.Routes
 import react.router.useNavigate
+import react.useState
 
 val Application = fc<Props> {
     val accessToken = localStorage["access"]
@@ -71,11 +76,11 @@ val Application = fc<Props> {
         Route {
             attrs {
                 path = "/change-password"
-                    element = createElement {
-                        child(ChangePassword) {
-                            attrs.client = authenticatedClient
-                        }
+                element = createElement {
+                    child(ChangePassword) {
+                        attrs.client = authenticatedClient
                     }
+                }
             }
         }
     }

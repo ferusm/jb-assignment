@@ -21,7 +21,7 @@ import react.router.useNavigate
 import react.useState
 import styled.*
 
-external interface ChangePasswordProps: Props {
+external interface ChangePasswordProps : Props {
     var client: HttpClient?
 }
 

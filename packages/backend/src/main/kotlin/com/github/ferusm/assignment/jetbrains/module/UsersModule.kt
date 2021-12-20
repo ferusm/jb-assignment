@@ -5,13 +5,11 @@ import com.github.ferusm.assignment.jetbrains.database.UserEntity
 import com.github.ferusm.assignment.jetbrains.database.UsersTable
 import com.github.ferusm.assignment.jetbrains.exception.ConflictException
 import com.github.ferusm.assignment.jetbrains.model.Password
-import com.github.ferusm.assignment.jetbrains.model.Role
 import com.github.ferusm.assignment.jetbrains.model.User
 import com.github.ferusm.assignment.jetbrains.util.BCryptUtil
 import com.github.ferusm.assignment.jetbrains.util.JWTUtil.user
 import io.ktor.application.*
 import io.ktor.auth.*
-import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*

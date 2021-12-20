@@ -4,7 +4,10 @@ import com.github.ferusm.assignment.jetbrains.model.Credentials
 import com.github.ferusm.assignment.jetbrains.model.Role
 import com.github.ferusm.assignment.jetbrains.model.TokenPair
 import com.github.ferusm.assignment.jetbrains.model.User
-import com.github.ferusm.assignment.jetbrains.module.*
+import com.github.ferusm.assignment.jetbrains.module.auth
+import com.github.ferusm.assignment.jetbrains.module.main
+import com.github.ferusm.assignment.jetbrains.module.reviewerArea
+import com.github.ferusm.assignment.jetbrains.module.users
 import com.typesafe.config.ConfigFactory
 import io.ktor.config.*
 import io.ktor.http.*
@@ -13,8 +16,8 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.*
+import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.*
 
 class ReviewerAreaModuleTest {
     private val environment = createTestEnvironment {

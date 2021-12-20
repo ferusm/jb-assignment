@@ -1,4 +1,5 @@
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig.*
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig.Mode
+
 plugins {
     kotlin("js")
 }
@@ -32,7 +33,7 @@ kotlin {
         binaries.executable()
         browser {
             commonWebpackConfig {
-                mode = if(project.hasProperty("prod")) Mode.PRODUCTION else Mode.DEVELOPMENT
+                mode = if (project.hasProperty("prod")) Mode.PRODUCTION else Mode.DEVELOPMENT
             }
         }
         useCommonJs()

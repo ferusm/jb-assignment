@@ -20,7 +20,8 @@ class RoleBasedAuthorization(private val config: Config) {
         pipeline.insertPhaseAfter(Authentication.ChallengePhase, AuthorizationPhase)
 
         pipeline.intercept(AuthorizationPhase) {
-            val principal = call.authentication.principal<Principal>() ?: throw IllegalStateException("RoleBasedAuthorization feature can't retrieve Principal from call")
+            val principal = call.authentication.principal<Principal>()
+                ?: throw IllegalStateException("RoleBasedAuthorization feature can't retrieve Principal from call")
             val currentRole = config.roleProvider.invoke(principal)
             if ((currentRole?.ordinal ?: 0) > role.ordinal) {
                 call.respond(HttpStatusCode.Forbidden)

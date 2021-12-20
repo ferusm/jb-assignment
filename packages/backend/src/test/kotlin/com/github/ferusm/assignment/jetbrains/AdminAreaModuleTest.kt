@@ -1,6 +1,5 @@
 package com.github.ferusm.assignment.jetbrains
 
-import at.favre.lib.crypto.bcrypt.BCrypt
 import com.github.ferusm.assignment.jetbrains.model.Credentials
 import com.github.ferusm.assignment.jetbrains.model.Role
 import com.github.ferusm.assignment.jetbrains.model.TokenPair
@@ -17,8 +16,8 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.*
+import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.*
 
 class AdminAreaModuleTest {
     private val environment = createTestEnvironment {

@@ -7,5 +7,6 @@ object BCryptUtil {
     private val verifier = BCrypt.verifyer()
 
     fun encrypt(cost: Int, input: String): String = encryptor.hashToString(cost, input.toCharArray())
-    fun isValid(hash: String, input: String): Boolean = verifier.verify(input.toCharArray(), hash.toCharArray()).verified
+    fun isValid(hash: String, input: String): Boolean =
+        verifier.verify(input.toCharArray(), hash.toCharArray()).verified
 }
