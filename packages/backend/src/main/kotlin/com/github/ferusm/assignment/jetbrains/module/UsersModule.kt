@@ -37,7 +37,7 @@ fun Application.users() {
                         val request = call.receive<Password>()
                         val encrypted = BCryptUtil.encrypt(request.password)
                         val updatedCount = transaction {
-                            UsersTable.update({UsersTable.name eq user.name}) {
+                            UsersTable.update({ UsersTable.name eq user.name }) {
                                 it[identifier] = encrypted
                             }
                         }
@@ -50,7 +50,8 @@ fun Application.users() {
             }
             post {
                 val request = call.receive<User>()
-                val requestIdentifier = request.identifier ?: throw IllegalArgumentException("Password must be initialized")
+                val requestIdentifier =
+                    request.identifier ?: throw IllegalArgumentException("Password must be initialized")
                 val encrypted = BCryptUtil.encrypt(requestIdentifier)
                 val entity = transaction {
                     if (UsersTable.select { UsersTable.name eq request.name }.count() == 0L) {

@@ -76,7 +76,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenPair'
-        '404':
+        '401':
           description: User not found
         '500':
           description: Internal server error
@@ -96,7 +96,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenPair'
-        '400':
+        '401':
           description: Bad refresh token
         '500':
           description: Internal server error

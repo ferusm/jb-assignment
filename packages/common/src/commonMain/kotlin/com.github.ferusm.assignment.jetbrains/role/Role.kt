@@ -10,9 +10,13 @@ abstract class Role() {
     abstract val name: String
     open val includes: List<Role> = emptyList()
 
-    private fun register() { add(this) }
+    private fun register() {
+        add(this)
+    }
 
-    init { register() }
+    init {
+        register()
+    }
 
     companion object {
         private val roles: MutableMap<String, Role> = mutableMapOf()

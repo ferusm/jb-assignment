@@ -7,7 +7,6 @@ import com.github.ferusn.assignment.page.Home
 import com.github.ferusn.assignment.page.Login
 import com.github.ferusn.assignment.provider.HttpClientProvider
 import kotlinx.browser.localStorage
-import kotlinx.browser.window
 import org.w3c.dom.get
 import org.w3c.dom.set
 import react.Props

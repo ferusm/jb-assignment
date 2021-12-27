@@ -1,8 +1,8 @@
 package com.github.ferusm.assignment.jetbrains.module
 
 import com.github.ferusm.assignment.jetbrains.database.DBConfig
-import com.github.ferusm.assignment.jetbrains.exception.UserAlreadyExistsException
 import com.github.ferusm.assignment.jetbrains.exception.InvalidTokenException
+import com.github.ferusm.assignment.jetbrains.exception.UserAlreadyExistsException
 import com.github.ferusm.assignment.jetbrains.exception.WrongCredentialsException
 import com.github.ferusm.assignment.jetbrains.util.JWTConfig
 import com.github.ferusm.assignment.jetbrains.util.JWTUtil.installClaimBasedRoleAuthorization

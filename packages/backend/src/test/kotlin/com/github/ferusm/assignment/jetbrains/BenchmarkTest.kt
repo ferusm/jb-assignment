@@ -47,7 +47,7 @@ class BenchmarkTest {
         withApplication(environment) {
             val users = mutableListOf<User>()
             val userCreateActor = actor<User> {
-                for(message in channel) {
+                for (message in channel) {
                     users.add(message)
                 }
             }

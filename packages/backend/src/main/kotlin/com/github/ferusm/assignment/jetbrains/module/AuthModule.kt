@@ -57,7 +57,8 @@ fun Application.auth() {
             }
             val refresh = JWTUtil.generateRefreshToken(jwtConfig)
             val access = transaction {
-                val user = UserEntity.find { UsersTable.refreshToken eq  request.refresh}.firstOrNull() ?: throw InvalidTokenException()
+                val user = UserEntity.find { UsersTable.refreshToken eq request.refresh }.firstOrNull()
+                    ?: throw InvalidTokenException()
 
                 user.refreshToken = refresh
 

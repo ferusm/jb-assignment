@@ -4,7 +4,6 @@ package com.github.ferusn.assignment.page
 import com.github.ferusm.assignment.jetbrains.model.Password
 import com.github.ferusn.assignment.resource.UserResource
 import io.ktor.client.*
-import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

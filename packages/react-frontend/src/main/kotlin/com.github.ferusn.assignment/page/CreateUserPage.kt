@@ -6,7 +6,6 @@ import com.github.ferusm.assignment.jetbrains.role.Role
 import com.github.ferusn.assignment.provider.HttpClientProvider
 import com.github.ferusn.assignment.resource.UserResource
 import com.github.ferusn.assignment.util.UnauthorizedRole
-import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

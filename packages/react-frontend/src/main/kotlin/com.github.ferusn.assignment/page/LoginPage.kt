@@ -3,7 +3,6 @@ package com.github.ferusn.assignment.page
 import com.github.ferusm.assignment.jetbrains.model.Credentials
 import com.github.ferusm.assignment.jetbrains.model.TokenPair
 import com.github.ferusn.assignment.resource.AuthResource
-import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
