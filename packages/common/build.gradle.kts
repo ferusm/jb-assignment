@@ -13,6 +13,7 @@ repositories {
 }
 
 val kotlinxSerializationVersion: String by project
+val kotlinxCoroutinesVersion: String by project
 
 kotlin {
     jvm()
@@ -23,6 +24,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinxSerializationVersion")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
             }
         }
     }

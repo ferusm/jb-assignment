@@ -10,6 +10,7 @@ import io.ktor.client.features.auth.*
 import io.ktor.client.features.auth.providers.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.browser.window
 
@@ -23,20 +24,29 @@ object HttpClientProvider {
         defaultRequest {
             contentType(ContentType.Application.Json)
         }
+        HttpResponseValidator {
+            handleResponseException { exception ->
+                if (exception !is ClientRequestException) return@handleResponseException
+                val response = exception.response
+                window.alert("[${response.status}]: ${exception.response.readText()}")
+            }
+        }
     }
 
-    fun authenticated(aTokens: TokenPair, onTokenChange: (TokenPair) -> Unit): HttpClient {
+    fun authenticated(aTokens: TokenPair, onUnauthorized: () -> Unit, onTokenChange: (TokenPair) -> Unit): HttpClient {
         return HttpClient {
             install(Auth) {
+                var tokens = BearerTokens(aTokens.access, aTokens.refresh)
                 bearer {
                     loadTokens {
-                        BearerTokens(aTokens.access, aTokens.refresh)
+                        tokens = BearerTokens(aTokens.access, aTokens.refresh)
+                        tokens
                     }
                     refreshTokens {
-                        val refresh = aTokens.refresh
-                        val newTokens = AuthResource.refresh(RefreshToken(refresh))
+                        val newTokens = AuthResource.refresh(RefreshToken(tokens.refreshToken))
                         onTokenChange(newTokens)
-                        BearerTokens(newTokens.access, newTokens.refresh)
+                        tokens = BearerTokens(newTokens.access, newTokens.refresh)
+                        tokens
                     }
                 }
             }
@@ -45,6 +55,16 @@ object HttpClientProvider {
             }
             defaultRequest {
                 contentType(ContentType.Application.Json)
+            }
+            HttpResponseValidator {
+                handleResponseException { exception ->
+                    if (exception !is ClientRequestException) return@handleResponseException
+                    val response = exception.response
+                    window.alert("[${response.status}]: ${exception.response.readText()}")
+                    if (response.status == HttpStatusCode.Unauthorized) {
+                        onUnauthorized()
+                    }
+                }
             }
         }
     }

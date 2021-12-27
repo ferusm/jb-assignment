@@ -55,13 +55,8 @@ val ChangePassword = fc<ChangePasswordProps> { props ->
                     it.preventDefault()
                     CoroutineScope(Dispatchers.Main).launch {
                         val password = Password(identifer)
-                        runCatching {
-                            UserResource.update(password, props.client!!)
-                        }.onSuccess {
-                            navigate("/")
-                        }.onFailure { exception ->
-                            window.alert(exception.message ?: "error")
-                        }
+                        UserResource.update(password, props.client!!)
+                        navigate("/")
                     }
                 }
             }

@@ -7,6 +7,7 @@ import com.github.ferusn.assignment.page.Home
 import com.github.ferusn.assignment.page.Login
 import com.github.ferusn.assignment.provider.HttpClientProvider
 import kotlinx.browser.localStorage
+import kotlinx.browser.window
 import org.w3c.dom.get
 import org.w3c.dom.set
 import react.Props
@@ -18,20 +19,24 @@ import react.router.useNavigate
 import react.useState
 
 val Application = fc<Props> {
+    val navigate = useNavigate()
+
     val accessToken = localStorage["access"]
     val refreshToken = localStorage["refresh"]
+
     val initClient = if (!accessToken.isNullOrBlank() && !refreshToken.isNullOrBlank()) {
         val tokens = TokenPair(accessToken, refreshToken)
-        HttpClientProvider.authenticated(tokens) { refreshedTokens ->
+        HttpClientProvider.authenticated(tokens, {
+            navigate("/login")
+        }, { refreshedTokens ->
             localStorage["access"] = refreshedTokens.access
             localStorage["refresh"] = refreshedTokens.refresh
-        }
+        })
     } else {
         null
     }
 
     var authenticatedClient by useState(initClient)
-    val navigate = useNavigate()
 
     Routes {
         Route {
@@ -58,10 +63,12 @@ val Application = fc<Props> {
                         attrs.onLogin = { tokens ->
                             localStorage["access"] = tokens.access
                             localStorage["refresh"] = tokens.refresh
-                            authenticatedClient = HttpClientProvider.authenticated(tokens) { refreshedTokens ->
+                            authenticatedClient = HttpClientProvider.authenticated(tokens, {
+                                navigate("/login")
+                            }, { refreshedTokens ->
                                 localStorage["access"] = refreshedTokens.access
                                 localStorage["refresh"] = refreshedTokens.refresh
-                            }
+                            })
                         }
                     }
                 }

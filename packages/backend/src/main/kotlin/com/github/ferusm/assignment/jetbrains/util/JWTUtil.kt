@@ -1,84 +1,63 @@
 package com.github.ferusm.assignment.jetbrains.util
 
 import com.auth0.jwt.JWT
+import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.github.ferusm.assignment.jetbrains.feature.RoleBasedAuthorization
-import com.github.ferusm.assignment.jetbrains.model.Role
 import com.github.ferusm.assignment.jetbrains.model.User
+import com.github.ferusm.assignment.jetbrains.role.Role
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.auth.jwt.*
-import io.ktor.config.*
 import kotlinx.datetime.Clock
 import kotlinx.datetime.toJavaInstant
 import java.util.*
+import kotlin.reflect.KClass
 import kotlin.time.Duration
 
 object JWTUtil {
+    private const val NAME_CLAIM = "name"
+    private const val ROLE_CLAIM = "role"
+
     fun generateAccessToken(
         username: String,
-        role: Role,
-        config: ApplicationConfig
-    ): String {
-        val secret = config.property("ktor.jwt.secret").getString()
-        val issuer = config.property("ktor.jwt.issuer").getString()
-        val audience = config.property("ktor.jwt.audience").getString()
-        val ttl = Duration.parse(config.property("ktor.jwt.accessTtl").getString())
+        role: String,
+        config: JWTConfig
+    ): String = generateToken(config, config.accessTokenTtl, NAME_CLAIM to username, ROLE_CLAIM to role)
 
-        return JWT.create()
-            .withAudience(audience)
-            .withIssuer(issuer)
-            .withClaim("name", username)
-            .withClaim("role", role.name)
+    fun generateRefreshToken(config: JWTConfig): String = generateToken(config, config.refreshTokenTtl)
+
+    private fun generateToken(config: JWTConfig, ttl: Duration, vararg claims: Pair<String, String>): String {
+        val builder = JWT.create()
+            .withAudience(config.audience)
+            .withIssuer(config.issuer)
             .withExpiresAt(Date.from(Clock.System.now().plus(ttl).toJavaInstant()))
-            .sign(Algorithm.HMAC256(secret))
+        claims.forEach { (name, value) ->
+            builder.withClaim(name, value)
+        }
+        return builder.sign(Algorithm.HMAC256(config.secret))
     }
 
-    fun generateRefreshToken(config: ApplicationConfig): String {
-        val secret = config.property("ktor.jwt.secret").getString()
-        val issuer = config.property("ktor.jwt.issuer").getString()
-        val audience = config.property("ktor.jwt.audience").getString()
-        val ttl = Duration.parse(config.property("ktor.jwt.refreshTtl").getString())
-
-        return JWT.create()
-            .withAudience(audience)
-            .withIssuer(issuer)
-            .withExpiresAt(Date.from(Clock.System.now().plus(ttl).toJavaInstant()))
-            .sign(Algorithm.HMAC256(secret))
-    }
-
-    fun isValidRefreshToken(token: String, config: ApplicationConfig): Boolean {
-        val secret = config.property("ktor.jwt.secret").getString()
-        val issuer = config.property("ktor.jwt.issuer").getString()
-        val audience = config.property("ktor.jwt.audience").getString()
-        val verifier = JWT
-            .require(Algorithm.HMAC256(secret))
-            .withAudience(audience)
-            .withIssuer(issuer)
-            .build()
+    fun isValidToken(token: String, config: JWTConfig): Boolean {
+        val verifier = createVerifier(config)
         val result = runCatching {
             verifier.verify(token)
         }
         return result.isSuccess
     }
 
-    fun Application.installJwtAuthentication() {
-        val config = environment.config
-        val secret = config.property("ktor.jwt.secret").getString()
-        val issuer = config.property("ktor.jwt.issuer").getString()
-        val audience = config.property("ktor.jwt.audience").getString()
-        val jwtRealm = config.property("ktor.jwt.realm").getString()
+    private fun createVerifier(config: JWTConfig): JWTVerifier = JWT
+        .require(Algorithm.HMAC256(config.secret))
+        .withAudience(config.audience)
+        .withIssuer(config.issuer)
+        .build()
 
-        val jwtVerifier = JWT
-            .require(Algorithm.HMAC256(secret))
-            .withAudience(audience)
-            .withIssuer(issuer)
-            .build()
-
+    fun Application.installJwtAuthentication(config: JWTConfig) {
+        val verifier = createVerifier(config)
         install(Authentication) {
             jwt {
-                realm = jwtRealm
-                verifier(jwtVerifier)
+                realm = config.realm
+                verifier(verifier)
                 validate { jwtCredential -> JWTPrincipal(jwtCredential.payload) }
             }
         }
@@ -88,21 +67,25 @@ object JWTUtil {
         install(RoleBasedAuthorization) {
             roleProvider = { principal ->
                 if (principal is JWTPrincipal) {
-                    val role = principal.getClaim("role", String::class)
-                    Role.values().find { it.name == role }
+                    val roleName = principal.getClaimOrThrow(ROLE_CLAIM, String::class)
+                    Role.get(roleName)
                 } else {
-                    null
+                    throw IllegalArgumentException("Authorization principal must be JWTPrincipal")
                 }
             }
         }
     }
 
     fun AuthenticationContext.user(): User {
-        val principal = principal<JWTPrincipal>()!!
-        val username = principal.getClaim("name", String::class)!!
-        val role = principal.getClaim("role", String::class)?.let { role ->
-            Role.values().find { it.name == role }
-        }!!
-        return User(username, null, role)
+        val principal =
+            principal<JWTPrincipal>() ?: throw IllegalArgumentException("Unable to retrieve JWTPrincipal from call")
+        val userName = principal.getClaimOrThrow(NAME_CLAIM, String::class)
+        val roleName = principal.getClaimOrThrow(ROLE_CLAIM, String::class)
+        val role = Role.get(roleName)
+        return User(userName, null, role)
     }
+}
+
+fun <T : Any> JWTPrincipal.getClaimOrThrow(name: String, clazz: KClass<T>): T {
+    return getClaim(name, clazz) ?: throw IllegalArgumentException("JWTPrincipal claim '$name' is null")
 }

@@ -1,9 +1,9 @@
 package com.github.ferusm.assignment.jetbrains.module
 
-import com.github.ferusm.assignment.jetbrains.database.DatabaseProvider
 import com.github.ferusm.assignment.jetbrains.database.UserEntity
 import com.github.ferusm.assignment.jetbrains.database.UsersTable
-import com.github.ferusm.assignment.jetbrains.exception.ConflictException
+import com.github.ferusm.assignment.jetbrains.exception.UserAlreadyExistsException
+import com.github.ferusm.assignment.jetbrains.exception.WrongCredentialsException
 import com.github.ferusm.assignment.jetbrains.model.Password
 import com.github.ferusm.assignment.jetbrains.model.User
 import com.github.ferusm.assignment.jetbrains.util.BCryptUtil
@@ -14,14 +14,13 @@ import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 
 fun Application.users() {
-    val database = runBlocking { DatabaseProvider.get("jdbc:h2:mem:users;DB_CLOSE_DELAY=-1", "org.h2.Driver") }
-
-    transaction(database) {
+    transaction {
         SchemaUtils.create(UsersTable)
     }
 
@@ -35,12 +34,15 @@ fun Application.users() {
                     }
                     put("/password") {
                         val user = call.authentication.user()
-                        val password = call.receive<Password>().password
-                        val newIdentifier = BCryptUtil.encrypt(4, password)
-                        transaction {
-                            UserEntity.find { UsersTable.name eq user.name }.firstOrNull()?.also {
-                                it.identifier = newIdentifier
+                        val request = call.receive<Password>()
+                        val encrypted = BCryptUtil.encrypt(request.password)
+                        val updatedCount = transaction {
+                            UsersTable.update({UsersTable.name eq user.name}) {
+                                it[identifier] = encrypted
                             }
+                        }
+                        if (updatedCount == 0) {
+                            throw WrongCredentialsException()
                         }
                         call.respond(HttpStatusCode.OK)
                     }
@@ -48,16 +50,17 @@ fun Application.users() {
             }
             post {
                 val request = call.receive<User>()
-                val newIdentifier = BCryptUtil.encrypt(4, request.identifier!!)
+                val requestIdentifier = request.identifier ?: throw IllegalArgumentException("Password must be initialized")
+                val encrypted = BCryptUtil.encrypt(requestIdentifier)
                 val entity = transaction {
-                    if (UserEntity.find { UsersTable.name eq request.name }.empty()) {
+                    if (UsersTable.select { UsersTable.name eq request.name }.count() == 0L) {
                         UserEntity.new {
                             name = request.name
-                            identifier = newIdentifier
+                            identifier = encrypted
                             role = request.role
                         }
                     } else {
-                        throw ConflictException("User with name: ${request.name} already exists")
+                        throw UserAlreadyExistsException()
                     }
                 }
                 val response = User(entity.name, entity.identifier, entity.role)

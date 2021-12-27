@@ -1,9 +1,11 @@
 package com.github.ferusn.assignment.page
 
-import com.github.ferusm.assignment.jetbrains.model.Role
+
 import com.github.ferusm.assignment.jetbrains.model.User
+import com.github.ferusm.assignment.jetbrains.role.Role
 import com.github.ferusn.assignment.provider.HttpClientProvider
 import com.github.ferusn.assignment.resource.UserResource
+import com.github.ferusn.assignment.util.UnauthorizedRole
 import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,13 +50,9 @@ val CreateUser = fc<Props> {
                             return@launch
                         }
                         val user = User(name, identifier, role!!)
-                        runCatching {
-                            UserResource.create(user, HttpClientProvider.regular)
-                        }.onSuccess {
-                            navigation("/login")
-                        }.onFailure { exception ->
-                            window.alert(exception.message ?: "error")
-                        }
+                        UserResource.create(user, HttpClientProvider.regular)
+                        navigation("/login")
+
                     }
                 }
             }
@@ -139,7 +137,7 @@ val CreateUser = fc<Props> {
                         onChangeFunction = {
                             val event = it.target as HTMLSelectElement
                             println(event.value)
-                            role = Role.valueOf(event.value)
+                            role = Role.get(event.value)
                         }
                     }
                     css {
@@ -155,7 +153,7 @@ val CreateUser = fc<Props> {
                         }
                         +""
                     }
-                    Role.values().map { it.name }.map {
+                    Role.get().filter { it != UnauthorizedRole }.map { it.name }.map {
                         option {
                             attrs {
                                 selected = it == role?.name

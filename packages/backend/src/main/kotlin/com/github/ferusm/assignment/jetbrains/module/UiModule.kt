@@ -8,7 +8,7 @@ fun Application.ui() {
     routing {
         static {
             resource("/openapi", "openapi/index.html")
-            resources("/openpai/")
+            resources("/openapi/")
             resource("/", "index.html")
             resources("/")
         }

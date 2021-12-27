@@ -44,13 +44,9 @@ val Login = fc<LoginProps> { props ->
                     event.preventDefault()
                     CoroutineScope(Dispatchers.Main).launch {
                         val credentials = Credentials(name, identifier)
-                        runCatching { AuthResource.create(credentials) }
-                            .onSuccess {
-                                props.onLogin(it)
-                                navigation("/")
-                            }.onFailure { exception ->
-                                window.alert(exception.message ?: "error")
-                            }
+                        val tokenPair = AuthResource.create(credentials)
+                        props.onLogin(tokenPair)
+                        navigation("/")
                     }
                 }
             }

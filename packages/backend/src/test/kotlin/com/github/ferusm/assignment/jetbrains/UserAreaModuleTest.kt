@@ -1,13 +1,15 @@
 package com.github.ferusm.assignment.jetbrains
 
 import com.github.ferusm.assignment.jetbrains.model.Credentials
-import com.github.ferusm.assignment.jetbrains.model.Role
 import com.github.ferusm.assignment.jetbrains.model.TokenPair
 import com.github.ferusm.assignment.jetbrains.model.User
 import com.github.ferusm.assignment.jetbrains.module.auth
 import com.github.ferusm.assignment.jetbrains.module.main
 import com.github.ferusm.assignment.jetbrains.module.userArea
 import com.github.ferusm.assignment.jetbrains.module.users
+import com.github.ferusm.assignment.jetbrains.role.AdminRole
+import com.github.ferusm.assignment.jetbrains.role.ReviewerRole
+import com.github.ferusm.assignment.jetbrains.role.UserRole
 import com.typesafe.config.ConfigFactory
 import io.ktor.config.*
 import io.ktor.http.*
@@ -33,7 +35,7 @@ class UserAreaModuleTest {
     @Test
     fun getWithAuthentication() {
         withApplication(environment) {
-            val userRequest = User("testUser11", "test", Role.USER)
+            val userRequest = User("testUser11", "test", UserRole)
             val userResponse = with(handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
@@ -53,14 +55,14 @@ class UserAreaModuleTest {
                 assertEquals(HttpStatusCode.OK, response.status())
                 response.content!!
             }
-            assertEquals(response, "You’re a ${Role.USER}, ${userResponse.name}")
+            assertEquals(response, "You’re a ${UserRole.name}, ${userResponse.name}")
         }
     }
 
     @Test
     fun getWithReviewerRole() {
         withApplication(environment) {
-            val userRequest = User("testReviewer2", "test", Role.REVIEWER)
+            val userRequest = User("testReviewer2", "test", ReviewerRole)
             val userResponse = with(handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
@@ -80,14 +82,14 @@ class UserAreaModuleTest {
                 assertEquals(HttpStatusCode.OK, response.status())
                 response.content!!
             }
-            assertEquals(response, "You’re a ${Role.USER}, ${userResponse.name}")
+            assertEquals(response, "You’re a ${UserRole.name}, ${userResponse.name}")
         }
     }
 
     @Test
     fun getWithAdminRole() {
         withApplication(environment) {
-            val userRequest = User("testAdmin2", "test", Role.ADMIN)
+            val userRequest = User("testAdmin2", "test", AdminRole)
             val userResponse = with(handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
@@ -107,7 +109,7 @@ class UserAreaModuleTest {
                 assertEquals(HttpStatusCode.OK, response.status())
                 response.content!!
             }
-            assertEquals(response, "You’re a ${Role.USER}, ${userResponse.name}")
+            assertEquals(response, "You’re a ${UserRole.name}, ${userResponse.name}")
         }
     }
 

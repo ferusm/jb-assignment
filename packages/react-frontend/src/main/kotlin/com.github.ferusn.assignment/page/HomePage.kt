@@ -1,11 +1,14 @@
 package com.github.ferusn.assignment.page
 
-import com.github.ferusm.assignment.jetbrains.model.Role
 import com.github.ferusm.assignment.jetbrains.model.User
+import com.github.ferusm.assignment.jetbrains.role.AdminRole
+import com.github.ferusm.assignment.jetbrains.role.ReviewerRole
+import com.github.ferusm.assignment.jetbrains.role.UserRole
 import com.github.ferusn.assignment.resource.AdminAreaResource
 import com.github.ferusn.assignment.resource.ReviewerAreaResource
 import com.github.ferusn.assignment.resource.UserAreaResource
 import com.github.ferusn.assignment.resource.UserResource
+import com.github.ferusn.assignment.util.UnauthorizedRole
 import io.ktor.client.*
 import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineScope
@@ -84,7 +87,7 @@ val Home = fc<HomeProps> { props ->
                     justifyContent = JustifyContent.spaceAround
                 }
                 span {
-                    +"Роль: ${user?.role ?: ""}"
+                    +"Роль: ${user?.role?.name ?: ""}"
                 }
             }
             styledDiv {
@@ -99,13 +102,8 @@ val Home = fc<HomeProps> { props ->
                         onClickFunction = {
                             it.preventDefault()
                             CoroutineScope(Dispatchers.Main).launch {
-                                runCatching {
-                                    AdminAreaResource.hello(props.client!!)
-                                }.onSuccess { response ->
-                                    window.alert(response)
-                                }.onFailure { exception ->
-                                    window.alert(exception.message ?: "error")
-                                }
+                                val response = AdminAreaResource.hello(props.client!!)
+                                window.alert(response)
                             }
                         }
                     }
@@ -113,7 +111,8 @@ val Home = fc<HomeProps> { props ->
                         hover {
                             cursor = Cursor.pointer
                         }
-                        color = if (user?.role?.check(Role.ADMIN) == true) {
+                        val role = user?.role ?: UnauthorizedRole
+                        color = if (role.isHaveRights(AdminRole)) {
                             Color.lightBlue
                         } else {
                             Color.orangeRed
@@ -126,13 +125,8 @@ val Home = fc<HomeProps> { props ->
                         onClickFunction = {
                             it.preventDefault()
                             CoroutineScope(Dispatchers.Main).launch {
-                                runCatching {
-                                    ReviewerAreaResource.hello(props.client!!)
-                                }.onSuccess { response ->
-                                    window.alert(response)
-                                }.onFailure { exception ->
-                                    window.alert(exception.message ?: "error")
-                                }
+                                val response = ReviewerAreaResource.hello(props.client!!)
+                                window.alert(response)
                             }
                         }
                     }
@@ -140,7 +134,8 @@ val Home = fc<HomeProps> { props ->
                         hover {
                             cursor = Cursor.pointer
                         }
-                        color = if (user?.role?.check(Role.REVIEWER) == true) {
+                        val role = user?.role ?: UnauthorizedRole
+                        color = if (role.isHaveRights(ReviewerRole)) {
                             Color.lightBlue
                         } else {
                             Color.orangeRed
@@ -153,13 +148,8 @@ val Home = fc<HomeProps> { props ->
                         onClickFunction = {
                             it.preventDefault()
                             CoroutineScope(Dispatchers.Main).launch {
-                                runCatching {
-                                    UserAreaResource.hello(props.client!!)
-                                }.onSuccess { response ->
-                                    window.alert(response)
-                                }.onFailure { exception ->
-                                    window.alert(exception.message ?: "error")
-                                }
+                                val response = UserAreaResource.hello(props.client!!)
+                                window.alert(response)
                             }
                         }
                     }
@@ -167,7 +157,8 @@ val Home = fc<HomeProps> { props ->
                         hover {
                             cursor = Cursor.pointer
                         }
-                        color = if (user?.role?.check(Role.USER) == true) {
+                        val role = user?.role ?: UnauthorizedRole
+                        color = if (role.isHaveRights(UserRole)) {
                             Color.lightBlue
                         } else {
                             Color.orangeRed

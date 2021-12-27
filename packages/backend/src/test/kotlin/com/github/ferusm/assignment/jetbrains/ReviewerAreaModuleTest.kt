@@ -1,13 +1,14 @@
 package com.github.ferusm.assignment.jetbrains
 
 import com.github.ferusm.assignment.jetbrains.model.Credentials
-import com.github.ferusm.assignment.jetbrains.model.Role
 import com.github.ferusm.assignment.jetbrains.model.TokenPair
 import com.github.ferusm.assignment.jetbrains.model.User
 import com.github.ferusm.assignment.jetbrains.module.auth
 import com.github.ferusm.assignment.jetbrains.module.main
 import com.github.ferusm.assignment.jetbrains.module.reviewerArea
 import com.github.ferusm.assignment.jetbrains.module.users
+import com.github.ferusm.assignment.jetbrains.role.ReviewerRole
+import com.github.ferusm.assignment.jetbrains.role.UserRole
 import com.typesafe.config.ConfigFactory
 import io.ktor.config.*
 import io.ktor.http.*
@@ -33,7 +34,7 @@ class ReviewerAreaModuleTest {
     @Test
     fun getWithAuthentication() {
         withApplication(environment) {
-            val userRequest = User("testReviewer", "test", Role.REVIEWER)
+            val userRequest = User("testReviewer", "test", ReviewerRole)
             val userResponse = with(handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
@@ -53,14 +54,14 @@ class ReviewerAreaModuleTest {
                 assertEquals(HttpStatusCode.OK, response.status())
                 response.content!!
             }
-            assertEquals(response, "You’re a ${Role.REVIEWER}, ${userResponse.name}")
+            assertEquals("You’re a ${ReviewerRole.name}, ${userResponse.name}", response)
         }
     }
 
     @Test
     fun getWithAdminRole() {
         withApplication(environment) {
-            val userRequest = User("testAdmin", "test", Role.ADMIN)
+            val userRequest = User("testAdmin", "test", ReviewerRole)
             val userResponse = with(handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
@@ -80,14 +81,14 @@ class ReviewerAreaModuleTest {
                 assertEquals(HttpStatusCode.OK, response.status())
                 response.content!!
             }
-            assertEquals(response, "You’re a ${Role.REVIEWER}, ${userResponse.name}")
+            assertEquals("You’re a ${ReviewerRole.name}, ${userResponse.name}", response)
         }
     }
 
     @Test
     fun getWithWrongRole() {
         withApplication(environment) {
-            val userRequest = User("testUser10", "test", Role.USER)
+            val userRequest = User("testUser10", "test", UserRole)
             with(handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))

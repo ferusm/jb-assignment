@@ -1,9 +1,13 @@
 package com.github.ferusm.assignment.jetbrains
 
-import com.github.ferusm.assignment.jetbrains.model.*
+import com.github.ferusm.assignment.jetbrains.model.Credentials
+import com.github.ferusm.assignment.jetbrains.model.RefreshToken
+import com.github.ferusm.assignment.jetbrains.model.TokenPair
+import com.github.ferusm.assignment.jetbrains.model.User
 import com.github.ferusm.assignment.jetbrains.module.auth
 import com.github.ferusm.assignment.jetbrains.module.main
 import com.github.ferusm.assignment.jetbrains.module.users
+import com.github.ferusm.assignment.jetbrains.role.UserRole
 import com.typesafe.config.ConfigFactory
 import io.ktor.config.*
 import io.ktor.http.*
@@ -30,7 +34,7 @@ class AuthModuleTest {
     @Test
     fun createTokens() {
         withApplication(environment) {
-            val userRequest = User("testUser1", "test", Role.USER)
+            val userRequest = User("testUser1", "test", UserRole)
             handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
@@ -53,7 +57,7 @@ class AuthModuleTest {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(tokenRequest))
             }) {
-                assertEquals(HttpStatusCode.NotFound, response.status())
+                assertEquals(HttpStatusCode.Unauthorized, response.status())
             }
         }
     }
@@ -61,23 +65,25 @@ class AuthModuleTest {
     @Test
     fun accessTokenTimeout() {
         withApplication(environment) {
-            val userRequest = User("testUser2", "test", Role.USER)
-            handleRequest(HttpMethod.Post, "/api/users") {
-                addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
-                setBody(Json.encodeToString(userRequest))
-            }
-            val tokenRequest = Credentials(userRequest.name, userRequest.identifier!!)
-            val tokenResponse = with(handleRequest(HttpMethod.Post, "/api/tokens") {
-                addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
-                setBody(Json.encodeToString(tokenRequest))
-            }) {
-                Json.decodeFromString<TokenPair>(response.content!!)
-            }
-            runBlocking { delay(2000) }
-            with(handleRequest(HttpMethod.Get, "/api/users/current") {
-                addHeader(HttpHeaders.Authorization, "Bearer ${tokenResponse.access}")
-            }) {
-                assertEquals(HttpStatusCode.Unauthorized, response.status())
+            runBlocking {
+                val userRequest = User("testUser2", "test", UserRole)
+                handleRequest(HttpMethod.Post, "/api/users") {
+                    addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
+                    setBody(Json.encodeToString(userRequest))
+                }
+                val tokenRequest = Credentials(userRequest.name, userRequest.identifier!!)
+                val tokenResponse = with(handleRequest(HttpMethod.Post, "/api/tokens") {
+                    addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
+                    setBody(Json.encodeToString(tokenRequest))
+                }) {
+                    Json.decodeFromString<TokenPair>(response.content!!)
+                }
+                delay(2000)
+                with(handleRequest(HttpMethod.Get, "/api/users/current") {
+                    addHeader(HttpHeaders.Authorization, "Bearer ${tokenResponse.access}")
+                }) {
+                    assertEquals(HttpStatusCode.Unauthorized, response.status())
+                }
             }
         }
     }
@@ -85,7 +91,7 @@ class AuthModuleTest {
     @Test
     fun refreshToken() {
         withApplication(environment) {
-            val userRequest = User("testUser3", "test", Role.USER)
+            val userRequest = User("testUser3", "test", UserRole)
             handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
@@ -97,7 +103,6 @@ class AuthModuleTest {
             }) {
                 Json.decodeFromString<TokenPair>(response.content!!)
             }
-            runBlocking { delay(1100) }
             val refresh = RefreshToken(tokenResponse.refresh)
             tokenResponse = with(handleRequest(HttpMethod.Post, "/api/refresh") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
@@ -117,31 +122,35 @@ class AuthModuleTest {
     @Test
     fun multipleUseOfRefreshToken() {
         withApplication(environment) {
-            val userRequest = User("testUser4", "test", Role.USER)
-            handleRequest(HttpMethod.Post, "/api/users") {
-                addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
-                setBody(Json.encodeToString(userRequest))
-            }
-            val tokenRequest = Credentials(userRequest.name, userRequest.identifier!!)
-            val tokenResponse = with(handleRequest(HttpMethod.Post, "/api/tokens") {
-                addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
-                setBody(Json.encodeToString(tokenRequest))
-            }) {
-                Json.decodeFromString<TokenPair>(response.content!!)
-            }
-            runBlocking { delay(1100) }
-            val refresh = RefreshToken(tokenResponse.refresh)
-            with(handleRequest(HttpMethod.Post, "/api/refresh") {
-                addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
-                setBody(Json.encodeToString(refresh))
-            }) {
-                assertEquals(HttpStatusCode.OK, response.status())
-            }
-            with(handleRequest(HttpMethod.Post, "/api/refresh") {
-                addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
-                setBody(Json.encodeToString(refresh))
-            }) {
-                assertEquals(HttpStatusCode.BadRequest, response.status())
+            runBlocking {
+                val userRequest = User("testUser4", "test", UserRole)
+                handleRequest(HttpMethod.Post, "/api/users") {
+                    addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
+                    setBody(Json.encodeToString(userRequest))
+                }
+                val tokenRequest = Credentials(userRequest.name, userRequest.identifier!!)
+                val tokenResponse = with(handleRequest(HttpMethod.Post, "/api/tokens") {
+                    addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
+                    setBody(Json.encodeToString(tokenRequest))
+                }) {
+                    Json.decodeFromString<TokenPair>(response.content!!)
+                }
+                delay(1000)
+                val refresh = RefreshToken(tokenResponse.refresh)
+                with(handleRequest(HttpMethod.Post, "/api/refresh") {
+                    addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
+                    setBody(Json.encodeToString(refresh))
+                }) {
+                    assertEquals(HttpStatusCode.OK, response.status())
+                    println(response.content)
+                }
+                with(handleRequest(HttpMethod.Post, "/api/refresh") {
+                    addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
+                    setBody(Json.encodeToString(refresh))
+                }) {
+                    assertEquals(HttpStatusCode.Unauthorized, response.status())
+                    println(response.content)
+                }
             }
         }
     }
@@ -149,7 +158,7 @@ class AuthModuleTest {
     @Test
     fun logout() {
         withApplication(environment) {
-            val userRequest = User("testUser5", "test", Role.USER)
+            val userRequest = User("testUser5", "test", UserRole)
             handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
@@ -171,13 +180,13 @@ class AuthModuleTest {
     }
 
     @Test
-    fun logoutWithAuthentication() {
+    fun logoutWithoutAuthentication() {
         withApplication(environment) {
             with(handleRequest(HttpMethod.Post, "/api/logout") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(RefreshToken(UUID.randomUUID().toString())))
             }) {
-                assertEquals(HttpStatusCode.OK, response.status())
+                assertEquals(HttpStatusCode.Unauthorized, response.status())
             }
         }
     }

@@ -1,9 +1,13 @@
 package com.github.ferusm.assignment.jetbrains
 
-import com.github.ferusm.assignment.jetbrains.model.*
+import com.github.ferusm.assignment.jetbrains.model.Credentials
+import com.github.ferusm.assignment.jetbrains.model.Password
+import com.github.ferusm.assignment.jetbrains.model.TokenPair
+import com.github.ferusm.assignment.jetbrains.model.User
 import com.github.ferusm.assignment.jetbrains.module.auth
 import com.github.ferusm.assignment.jetbrains.module.main
 import com.github.ferusm.assignment.jetbrains.module.users
+import com.github.ferusm.assignment.jetbrains.role.UserRole
 import com.typesafe.config.ConfigFactory
 import io.ktor.config.*
 import io.ktor.http.*
@@ -28,7 +32,7 @@ class UsersModuleTest {
     @Test
     fun createUser() {
         withApplication(environment) {
-            val userRequest = User("testUser13", "test", Role.USER)
+            val userRequest = User("testUser13", "test", UserRole)
             val userResponse = with(handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
@@ -44,7 +48,7 @@ class UsersModuleTest {
     @Test
     fun createWithUsedName() {
         withApplication(environment) {
-            val userRequest = User("testUser14", "test", Role.USER)
+            val userRequest = User("testUser14", "test", UserRole)
             with(handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
@@ -63,7 +67,7 @@ class UsersModuleTest {
     @Test
     fun getCurrentUser() {
         withApplication(environment) {
-            val userRequest = User("testUser15", "test", Role.USER)
+            val userRequest = User("testUser15", "test", UserRole)
             with(handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
@@ -102,7 +106,7 @@ class UsersModuleTest {
     @Test
     fun changePassword() {
         withApplication(environment) {
-            val userRequest = User("testUser16", "test", Role.USER)
+            val userRequest = User("testUser16", "test", UserRole)
             with(handleRequest(HttpMethod.Post, "/api/users") {
                 addHeader(HttpHeaders.ContentType, "${ContentType.Application.Json}")
                 setBody(Json.encodeToString(userRequest))
